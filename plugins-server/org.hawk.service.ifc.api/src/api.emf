@@ -1,0 +1,68 @@
+/* Copyright (C) 2015-2018 University of York, Aston University.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@thrift(javans="org.hawk.service.ifc.api")
+@namespace(uri="http://github.com/mondo-hawk-ifc/hawk_api_ifc", prefix="")
+package hawk_api_ifc;
+
+// Register the main API .ecore first!
+import "platform:/resource/org.hawk.service.api/src/api.ecore";
+
+@doc(d="Options for a server-side IFC export.")
+class IFCExportOptions {
+  @doc(d="The repository for the query (or * for all repositories)", optional="true", default="*")
+  attr String repositoryPattern;
+
+  @doc(d="The file patterns for the query (e.g. *.uml)", optional="true")
+  attr String[*] filePatterns;
+
+  @doc(d="If set and not empty, only the specified metamodels, types and features will be fetched. Otherwise, everything that is not excluded will be fetched. The string '*' can be used to refer to all types within a metamodel or all fields within a type.", optional="true")
+  val hawk_api.EffectiveMetamodelMap includeRules;
+
+  @doc(d="If set and not empty, the mentioned metamodels, types and features will not be fetched. The string '*' can be used to refer to all types within a metamodel or all fields within a type.", optional="true")
+  val hawk_api.EffectiveMetamodelMap excludeRules;
+}
+
+@doc(d="Status of a server-side IFC export job.")
+enum IFCExportStatus {
+	@doc(d="The job has been scheduled but has not started yet.") SCHEDULED;
+	@doc(d="The job is currently running.") RUNNING;
+	@doc(d="The job has been cancelled.") CANCELLED;
+	@doc(d="The job has failed.") FAILED;
+	@doc(d="The job is completed.") DONE;
+}
+
+@doc(d="Information about a server-side IFC export job.")
+class IFCExportJob {
+	attr String jobID;
+	attr IFCExportStatus status;
+	attr String message;
+}
+
+@doc(d="IFC export facility for getting IFC models from the Hawk server")
+class IFCExport {
+	@doc(d="Export part of a Hawk index in IFC STEP format")
+	op IFCExportJob exportAsSTEP(String hawkInstance, IFCExportOptions options);
+
+	@doc(d="List all the previously scheduled IFC export jobs")
+	op IFCExportJob[*] getJobs();
+
+	@doc(d="Retrieve the current status of the job with the specified ID")
+	op IFCExportJob getJobStatus(String jobID);
+
+	@doc(d="Cancel the job with the specified ID")
+	op boolean killJob(String jobID);
+}
